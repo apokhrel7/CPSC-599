@@ -1,0 +1,83 @@
+/*
+   Code to detect pulses from the PulseSensor
+   and move a servo motor to the beat.
+   
+*/
+
+
+#include <Servo.h>
+#include <PulseSensorPlayground.h>
+
+/*
+
+
+const int PULSE_INPUT = A0;
+const int PULSE_FADE = 10;
+const int THRESHOLD = 610;   // Adjust this number to avoid noise when idle
+
+
+PulseSensorPlayground pulseSensor;
+
+/*
+  Make a heart servo, the pin to control it with,
+  and a servo position variable
+*/
+Servo heart;
+const int SERVO_PIN = 6;
+int pos = 90;
+
+void setup() {
+ 
+  Serial.begin(115200);
+  // set up the heart servo on SERVO_PULSE
+  // set servo position to pos (90 degrees, mid position)
+  heart.attach(SERVO_PIN);
+  heart.write(pos);
+
+  // Configure the PulseSensor manager.
+  pulseSensor.analogInput(PULSE_INPUT);
+  pulseSensor.blinkOnPulse(PULSE_BLINK);
+  pulseSensor.fadeOnPulse(PULSE_FADE);
+
+  pulseSensor.setSerial(Serial);
+  pulseSensor.setOutputType(OUTPUT_TYPE);
+  pulseSensor.setThreshold(THRESHOLD);
+
+  // Now that everything is ready, start reading the PulseSensor signal.
+  
+}
+
+void loop() {
+  
+  if(pulseSensor.UsingHardwareTimer){
+    /*
+       Wait a bit.
+       
+    */
+    delay(20); 
+
+    pulseSensor.outputSample();
+    moveServo(pulseSensor.getLatestSample());
+  } else {
+  
+      
+    if (pulseSensor.sawNewSample()) {
+      
+      if (pulseSensor.samplesUntilReport == (byte) 0) {
+        pulseSensor.samplesUntilReport = SAMPLES_PER_SERIAL_SAMPLE;
+        pulseSensor.outputSample();
+
+        // send the heart rate to move servo
+        moveServo(pulseSensor.getLatestSample());
+      }
+    }
+  }
+  
+}
+
+
+// function to give range to servo movement
+void moveServo(int value){
+  pos = map(value,0,1023,0,180);
+  heart.write(pos);
+}
